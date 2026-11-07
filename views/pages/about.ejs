@@ -1,0 +1,222 @@
+<%# =============================================================================
+   ABOUT PAGE
+   URL: /about
+   File: views/pages/about.ejs
+   ============================================================================= %>
+<%- include("../partials/head", { page }) %>
+<%- include("../partials/navbar", { navItems, brand, page }) %>
+
+  <main class="about-page">
+    <section class="about-hero">
+      <div class="about-hero__glow" aria-hidden="true"></div>
+      <div class="container">
+        <nav class="about-crumb" aria-label="Breadcrumb">
+          <a href="/">Home</a>
+          <span aria-hidden="true">/</span>
+          <span>About Shrisha Technology</span>
+        </nav>
+        <p class="about-kicker">Who we are</p>
+        <h1>
+          India’s premier custom
+          <span>website, software &amp; growth studio</span>
+        </h1>
+        <p class="about-hero__lead">
+          We build digital infrastructure for growing businesses — websites, apps, software,
+          <strong>SEO &amp; GEO</strong>, and student projects — with agency-grade craft at a clear, honest price.
+        </p>
+        <div class="about-hero__actions">
+          <a class="btn" href="/contact">Start a project</a>
+          <a class="btn btn-outline" href="/services">View services</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-mission section">
+      <div class="container about-mission__inner">
+        <h2>Our mission</h2>
+        <p>
+          To make high-quality software engineering reachable for India’s startups, shops, and students —
+          <strong>custom, scalable, and affordable</strong> products that look professional, load fast, and
+          get found on Google and in AI search.
+        </p>
+      </div>
+    </section>
+
+    <section class="about-why section">
+      <div class="container about-why__grid">
+        <figure class="about-why__media">
+          <img
+            src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&w=1400&q=80"
+            width="1400"
+            height="933"
+            alt="Workspace with laptop and code"
+            loading="lazy"
+            decoding="async"
+          >
+        </figure>
+        <div class="about-why__copy">
+          <h2>Why Shrisha Technology?</h2>
+          <p>
+            Too many businesses are stuck between expensive agencies and unreliable one-off freelancers.
+            We sit in the middle: a focused studio with process, design discipline, and a single point of contact.
+          </p>
+          <p>
+            From first brief to launch — and after — you get transparent timelines, milestone demos, and
+            work you can actually own. Websites, apps, branding, <strong>SEO &amp; GEO</strong>, and
+            academic projects are delivered to the same standard.
+          </p>
+          <ul class="about-why__stats" aria-label="Studio highlights">
+            <li>
+              <strong>10+</strong>
+              <span>Projects delivered</span>
+            </li>
+            <li>
+              <strong>100%</strong>
+              <span>Transparent pricing</span>
+            </li>
+            <li>
+              <strong>24/7</strong>
+              <span>Local support</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-people section" id="founder">
+      <div class="container about-people__narrow">
+        <p class="about-people__label">Founder</p>
+        <article class="about-profile about-profile--founder">
+          <h2 class="about-profile__name">Krishna Gupta</h2>
+          <p class="about-profile__title">Founder</p>
+          <p class="about-profile__bio">Responsible for the overall vision, leadership, strategy, and growth of the company.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="about-people about-people--team section" id="team">
+      <div class="container">
+        <p class="about-people__label about-people__label--center">Team</p>
+        <div class="about-people__row">
+          <article class="about-profile">
+            <h3 class="about-profile__name">Aman Kushwaha</h3>
+            <p class="about-profile__title">Software Developer</p>
+            <p class="about-profile__bio">Responsible for designing, developing, and maintaining the website, backend systems, database, and technical infrastructure.</p>
+          </article>
+          <article class="about-profile">
+            <h3 class="about-profile__name">Sanjay Kushwaha</h3>
+            <p class="about-profile__title">Operations &amp; Marketing</p>
+            <p class="about-profile__bio">Responsible for managing business operations, marketing activities, customer relationships, and overall business growth.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-principles section">
+      <div class="container">
+        <header class="about-principles__head">
+          <h2>Our core principles</h2>
+          <p>The values that guide every project we take on.</p>
+        </header>
+        <div class="about-principles__grid">
+          <article class="about-principle">
+            <span class="about-principle__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 3 4 7.5V12c0 5 3.4 9.4 8 10.5C16.6 21.4 20 17 20 12V7.5L12 3Zm0 2.2 6 3.4V12c0 3.9-2.5 7.4-6 8.4-3.5-1-6-4.5-6-8.4V8.6l6-3.4Z"/></svg>
+            </span>
+            <h3>Craft first</h3>
+            <p>Clean code, considered UI, and performance that holds up on real phones — not just demo laptops.</p>
+          </article>
+          <article class="about-principle">
+            <span class="about-principle__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 2 4 6v6c0 5.2 3.4 9.8 8 11 4.6-1.2 8-5.8 8-11V6l-8-4Zm-1 14.2-3.5-3.5 1.4-1.4L11 13.4l4.6-4.6 1.4 1.4L11 16.2Z"/></svg>
+            </span>
+            <h3>Absolute transparency</h3>
+            <p>Scope, price, and dates in writing. You see progress as we build — no surprise invoices.</p>
+          </article>
+          <article class="about-principle">
+            <span class="about-principle__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M8 11a3.5 3.5 0 1 0-3.5-3.5A3.5 3.5 0 0 0 8 11Zm8 0a3.5 3.5 0 1 0-3.5-3.5A3.5 3.5 0 0 0 16 11ZM8 13c-3 0-6 1.5-6 3.5V19h8.2A6.5 6.5 0 0 1 16 12.1 6.4 6.4 0 0 0 8 13Zm8 1a4.5 4.5 0 1 0 4.5 4.5A4.5 4.5 0 0 0 16 14Zm.8 2.2h-.8v2.3l2 1.2.4-.7-1.6-.9Z"/></svg>
+            </span>
+            <h3>Long-term partners</h3>
+            <p>We plan for after launch: handover, training, and maintenance so you are not left guessing.</p>
+          </article>
+          <article class="about-principle">
+            <span class="about-principle__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 18h16v2H4v-2Zm1.5-3.2 3.2-8.6h2.1L14 14.8h-2.1l-.6-1.8H8.2l-.6 1.8H5.5ZM9 11.4h2.3L10.2 8 9 11.4Zm7.6 3.4V6.8h4.2V8.6h-2.4v1.4H20v1.7h-1.6V13h2.5v1.8h-4.3Z"/></svg>
+            </span>
+            <h3>SEO &amp; GEO ready</h3>
+            <p>Pages structured for Google and for AI answers — so customers can find you in search and chat.</p>
+          </article>
+          <article class="about-principle">
+            <span class="about-principle__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 3 4.5 7.2V12c0 4.6 3.2 8.8 7.5 9.8 4.3-1 7.5-5.2 7.5-9.8V7.2L12 3Zm0 2.2 5.5 3.1v3.5c0 1.8-.5 3.6-1.4 5.1A16 16 0 0 0 12 18.6a16 16 0 0 0-4.1-1.7 9.4 9.4 0 0 1-1.4-5.1V8.3L12 5.2Z"/></svg>
+            </span>
+            <h3>Education first</h3>
+            <p>Student projects include documentation, PPT support, and viva guidance — not just dumped code.</p>
+          </article>
+          <article class="about-principle">
+            <span class="about-principle__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M20 15.5c0 3-3.6 5.5-8 5.5s-8-2.5-8-5.5V8.8C4 5.8 7.6 3.3 12 3.3s8 2.5 8 5.5v6.7ZM12 5.3c-3.3 0-6 1.6-6 3.5s2.7 3.5 6 3.5 6-1.6 6-3.5-2.7-3.5-6-3.5Z"/></svg>
+            </span>
+            <h3>Always reachable</h3>
+            <p>WhatsApp, call, and on-site chat — answers in hours, not days, in the language you already use.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-offer section">
+      <div class="container">
+        <header class="about-principles__head">
+          <h2>What we build</h2>
+          <p>One studio for launch, growth, and academic delivery.</p>
+        </header>
+        <ul class="about-offer__list">
+          <li><a href="/services#website-development">Websites</a></li>
+          <li><a href="/services#app-development">Apps</a></li>
+          <li><a href="/services#seo-geo">SEO &amp; GEO</a></li>
+          <li><a href="/pricing#logo-design">Logo &amp; brand</a></li>
+          <li><a href="/services#software-development">Custom software</a></li>
+          <li><a href="/contact">Student projects</a></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section about-hire-section" id="join-team">
+      <div class="container">
+        <article class="about-hire-card card">
+          <div class="about-hire-copy">
+            <span class="chip">We are hiring</span>
+            <h2>Join as a freelancer / team member</h2>
+            <p>
+              If you are a developer, designer, video editor, or AI specialist, apply through our
+              <strong>Work</strong> form. Select your category, choose your skill, and submit your details.
+            </p>
+            <ul class="about-hire-points">
+              <li>App Development</li>
+              <li>Development &amp; IT</li>
+              <li>Design &amp; Creative</li>
+              <li>Admin &amp; Support</li>
+              <li>Video &amp; Audio</li>
+              <li>AI &amp; Automation</li>
+            </ul>
+            <a class="btn" href="/work">Apply now — fill work form</a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="about-cta section">
+      <div class="container about-cta__box">
+        <h2>Ready to start?</h2>
+        <p>Tell us what you need. We will reply with a clear plan, timeline, and quote.</p>
+        <div class="about-hero__actions">
+          <a class="btn" href="/contact">Get a quote</a>
+          <a class="btn btn-outline" href="/portfolio">View portfolio</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+<%- include("../partials/footer", { brand, year }) %>
+<%- include("../partials/scripts") %>

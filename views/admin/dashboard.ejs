@@ -1,0 +1,684 @@
+<%# =============================================================================
+   ADMIN DASHBOARD
+   URL: /admin
+   File: views/admin/dashboard.ejs
+   Stats, orders, inbox, users, charts
+   ============================================================================= %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js" crossorigin></script>
+</head>
+<body class="admin-body">
+  <div class="admin-app">
+    <aside class="admin-sidebar" aria-label="Admin navigation">
+      <a class="admin-brand" href="/admin"><%= brand %></a>
+      <p class="admin-sidebar-tag">Control center</p>
+      <nav class="admin-side-nav">
+        <a href="#overview">Overview</a>
+        <a href="#activity">Activity chart</a>
+        <a href="#inbox-orders">Payments &amp; orders</a>
+        <a href="#inbox-contact">Contact inbox</a>
+        <a href="#inbox-chat">Chatbot messages</a>
+        <a href="#inbox-work">Work applications</a>
+        <a href="#users">Users</a>
+      </nav>
+      <div class="admin-sidebar-foot">
+        <a class="admin-sidebar-link" href="/">View site</a>
+        <a class="admin-sidebar-link" href="/auth/logout">Logout</a>
+      </div>
+    </aside>
+
+    <div class="admin-main">
+      <header class="admin-topbar">
+        <div>
+          <h1 class="admin-title">Dashboard</h1>
+          <p class="admin-sub">Signed in as <%= authUser && authUser.name ? authUser.name : "Admin" %><% if (authUser && authUser.role === 'admin') { %> · <strong>Admin</strong><% } %></p>
+        </div>
+        <button class="theme-toggle" type="button" aria-label="Toggle theme" title="Toggle theme">
+          <span class="theme-icon" aria-hidden="true">
+            <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 14.5a8.5 8.5 0 0 1-11.6-11A9.5 9.5 0 1 0 21 14.5Z"/></svg>
+            <svg class="icon-sun" viewBox="0 0 24 24"><path d="M12 18a6 6 0 1 1 0-12 6 6 0 0 1 0 12Zm0-16a1 1 0 0 1 1 1v1a1 1 0 1 1-2 0V3a1 1 0 0 1 1-1Zm0 18a1 1 0 0 1 1 1v1a1 1 0 1 1-2 0v-1a1 1 0 0 1 1-1ZM3 11h1a1 1 0 1 1 0 2H3a1 1 0 1 1 0-2Zm17 0h1a1 1 0 1 1 0 2h-1a1 1 0 1 1 0-2ZM5.6 4.2a1 1 0 0 1 1.4 0l.7.7a1 1 0 0 1-1.4 1.4l-.7-.7a1 1 0 0 1 0-1.4Zm10.7 10.7a1 1 0 0 1 1.4 0l.7.7a1 1 0 0 1-1.4 1.4l-.7-.7a1 1 0 0 1 0-1.4ZM18.4 4.2a1 1 0 0 1 0 1.4l-.7.7a1 1 0 0 1-1.4-1.4l.7-.7a1 1 0 0 1 1.4 0ZM7.7 14.9a1 1 0 0 1 0 1.4l-.7.7a1 1 0 1 1-1.4-1.4l.7-.7a1 1 0 0 1 1.4 0Z"/></svg>
+          </span>
+        </button>
+      </header>
+
+      <div class="admin-content">
+        <% function fmtAdminDate(value) {
+          if (!value) return '—';
+          try {
+            var d = new Date(value);
+            if (isNaN(d.getTime())) return String(value).slice(0, 16);
+            return d.toLocaleString('en-IN', {
+              day: '2-digit', month: 'short', year: 'numeric',
+              hour: '2-digit', minute: '2-digit', hour12: true
+            });
+          } catch (e) { return String(value); }
+        } %>
+        <% const flashText = {
+          roleupdated: 'User role updated.',
+          delivered: 'Project marked as delivered — client can pay balance now.',
+          synced: 'Payment synced from Razorpay — order updated.',
+          advancepaid: 'Advance marked as paid manually.',
+          orderdeleted: 'Order deleted.',
+        }; %>
+        <% if (flash && flashText[flash]) { %>
+          <p class="admin-flash admin-flash-ok" role="status"><%= flashText[flash] %></p>
+        <% } %>
+        <% if (err) { %>
+          <p class="admin-flash admin-flash-err" role="alert">
+            <% if (err === 'invalid') { %>
+              That action was not valid.
+            <% } else if (err === 'selfdemote') { %>
+              You cannot remove your own admin role.
+            <% } else if (err === 'notready') { %>
+              Only advance-paid orders can be marked delivered.
+            <% } else if (err === 'nobalance') { %>
+              This order has no remaining balance to collect.
+            <% } else if (err === 'nosync') { %>
+              No captured payment found on Razorpay for this order yet.
+            <% } else if (err === 'norazorpay') { %>
+              This order has no Razorpay checkout — send the advance payment link to the client.
+            <% } else { %>
+              <%= err %>
+            <% } %>
+          </p>
+        <% } %>
+
+        <section class="admin-section" id="overview">
+          <h2 class="admin-h2">Overview</h2>
+          <div class="admin-kpi-grid">
+            <article class="admin-kpi">
+              <span class="admin-kpi-label">Total users</span>
+              <strong class="admin-kpi-value"><%= stats.users %></strong>
+              <span class="admin-kpi-meta"><%= stats.usersWeek %> new (7 days)</span>
+            </article>
+            <article class="admin-kpi">
+              <span class="admin-kpi-label">Contact messages</span>
+              <strong class="admin-kpi-value"><%= stats.contacts %></strong>
+              <span class="admin-kpi-meta admin-kpi-warn"><%= stats.contactsNew %> new</span>
+            </article>
+            <article class="admin-kpi">
+              <span class="admin-kpi-label">Work applications</span>
+              <strong class="admin-kpi-value"><%= stats.work %></strong>
+              <span class="admin-kpi-meta admin-kpi-warn"><%= stats.workNew %> new</span>
+            </article>
+            <article class="admin-kpi">
+              <span class="admin-kpi-label">Chatbot messages</span>
+              <strong class="admin-kpi-value"><%= stats.chats %></strong>
+              <span class="admin-kpi-meta admin-kpi-warn"><%= stats.chatsNew %> new</span>
+            </article>
+            <article class="admin-kpi admin-kpi-accent">
+              <span class="admin-kpi-label">Orders (total)</span>
+              <strong class="admin-kpi-value"><%= stats.orders %></strong>
+              <span class="admin-kpi-meta"><%= stats.ordersAdvancePaid %> with payment · <%= stats.ordersCompleted %> fully paid</span>
+            </article>
+            <article class="admin-kpi admin-kpi-accent">
+              <span class="admin-kpi-label">Revenue collected</span>
+              <strong class="admin-kpi-value">₹<%= Number(stats.revenuePaid).toLocaleString('en-IN') %></strong>
+              <span class="admin-kpi-meta"><%= stats.ordersBalanceDue %> awaiting balance payment</span>
+            </article>
+            <article class="admin-kpi">
+              <span class="admin-kpi-label">Pipeline</span>
+              <strong class="admin-kpi-value"><%= stats.contactsNew + stats.workNew + stats.chatsNew + stats.ordersPending %></strong>
+              <span class="admin-kpi-meta">Open items</span>
+            </article>
+          </div>
+        </section>
+
+        <section class="admin-section" id="activity">
+          <h2 class="admin-h2">Submissions (last 14 days)</h2>
+          <div class="admin-chart-card">
+            <canvas id="adminChart" height="120" aria-label="Submissions chart"></canvas>
+          </div>
+        </section>
+
+        <section class="admin-section" id="inbox-orders">
+          <h2 class="admin-h2">Payments &amp; orders</h2>
+          <p class="admin-section-desc">Advance + balance payments. Mark project delivered to unlock balance payment link for the client.</p>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>When</th>
+                  <th>Status</th>
+                  <th>Order ID</th>
+                  <th>Customer</th>
+                  <th>Service / plan</th>
+                  <th>Advance</th>
+                  <th>Balance</th>
+                  <th>Total</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% recentOrders.forEach((row) => {
+                  const st = normalizeOrderStatus(row);
+                  const balanceDue = getBalanceDue(row);
+                  const statusLabel = orderStatusLabel(row);
+                  const pillClass = st === 'completed' ? 'completed' : (st === 'advance_paid' && row.delivered_at && balanceDue > 0 ? 'balance-due' : (st === 'advance_paid' ? 'paid' : 'pending'));
+                  const balancePayUrl = baseUrl + '/order/pay-balance?id=' + encodeURIComponent(row.public_id);
+                  const advancePayUrl = baseUrl + '/order/pay-advance?id=' + encodeURIComponent(row.public_id);
+                %>
+                  <tr>
+                    <td><%= row.id %></td>
+                    <td class="admin-nowrap"><%= row.created_at %></td>
+                    <td>
+                      <span class="admin-pill admin-pill-<%= pillClass %>"><%= statusLabel %></span>
+                      <% if (row.delivered_at) { %><br><span class="admin-muted">Delivered</span><% } %>
+                    </td>
+                    <td class="admin-nowrap"><code><%= row.public_id %></code></td>
+                    <td>
+                      <strong><%= row.name %></strong><br>
+                      <a href="mailto:<%= row.email %>"><%= row.email %></a>
+                      <% if (row.phone) { %><br><span class="admin-muted"><%= row.phone %></span><% } %>
+                    </td>
+                    <td><%= row.service %><br><span class="admin-muted"><%= row.plan %></span></td>
+                    <td>
+                      <% if (st === 'pending') { %>
+                        ₹<%= Number(row.amount_inr).toLocaleString('en-IN') %> <span class="admin-muted">due</span>
+                      <% } else { %>
+                        ₹<%= Number(row.advance_paid_inr || row.amount_inr).toLocaleString('en-IN') %> <span class="admin-muted">paid</span>
+                      <% } %>
+                    </td>
+                    <td>
+                      <% if (st === 'completed') { %>
+                        ₹<%= Number(row.balance_paid_inr || 0).toLocaleString('en-IN') %> <span class="admin-muted">paid</span>
+                      <% } else if (balanceDue > 0) { %>
+                        ₹<%= balanceDue.toLocaleString('en-IN') %> <span class="admin-muted">due</span>
+                      <% } else { %>
+                        —
+                      <% } %>
+                    </td>
+                    <td>₹<%= Number(row.total_inr).toLocaleString('en-IN') %></td>
+                    <td class="admin-order-actions">
+                      <% if (st === 'advance_paid' && !row.delivered_at && balanceDue > 0) { %>
+                        <form method="post" action="/admin/orders/<%= row.id %>/deliver" class="admin-inline-form">
+                          <button type="submit" class="btn btn-small">Mark delivered</button>
+                        </form>
+                      <% } %>
+                      <% if (st === 'advance_paid' && row.delivered_at && balanceDue > 0) { %>
+                        <a class="btn btn-small" href="<%= balancePayUrl %>" target="_blank" rel="noopener">Balance link</a>
+                        <button type="button" class="btn btn-small btn-outline admin-copy-link" data-copy-url="<%= balancePayUrl %>">Copy link</button>
+                      <% } %>
+                      <% if (st === 'advance_paid' || st === 'completed') { %>
+                        <a class="btn btn-small btn-outline" href="/order/receipt?id=<%= encodeURIComponent(row.public_id) %>" target="_blank" rel="noopener">Advance</a>
+                      <% } %>
+                      <% if (st === 'completed') { %>
+                        <a class="btn btn-small btn-outline" href="/order/receipt?id=<%= encodeURIComponent(row.public_id) %>&phase=balance" target="_blank" rel="noopener">Balance</a>
+                      <% } %>
+                      <% if (st === 'pending') { %>
+                        <a class="btn btn-small" href="<%= advancePayUrl %>" target="_blank" rel="noopener">Pay link</a>
+                        <button type="button" class="btn btn-small btn-outline admin-copy-link" data-copy-url="<%= advancePayUrl %>">Copy link</button>
+                        <form method="post" action="/admin/orders/<%= row.id %>/sync" class="admin-inline-form">
+                          <button type="submit" class="btn btn-small btn-outline">Sync Razorpay</button>
+                        </form>
+                        <form method="post" action="/admin/orders/<%= row.id %>/mark-advance-paid" class="admin-inline-form" onsubmit="return confirm('Mark advance as paid manually (WhatsApp/cash)?');">
+                          <button type="submit" class="btn btn-small btn-outline">Mark paid</button>
+                        </form>
+                        <form method="post" action="/admin/orders/<%= row.id %>/delete" class="admin-inline-form" onsubmit="return confirm('Delete this pending order?');">
+                          <button type="submit" class="btn btn-small btn-outline admin-btn-danger">Delete</button>
+                        </form>
+                      <% } %>
+                    </td>
+                  </tr>
+                <% }) %>
+                <% if (!recentOrders.length) { %>
+                  <tr><td colspan="10" class="admin-empty">No orders yet. Payments from the order page will appear here.</td></tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="admin-section" id="inbox-contact">
+          <h2 class="admin-h2">Contact inbox</h2>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>When</th>
+                  <th>Status</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Message</th>
+                  <th class="admin-th-actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% recentContact.forEach((row, msgIdx) => { %>
+                  <tr>
+                    <td><%= row.id %></td>
+                    <td class="admin-nowrap"><%= fmtAdminDate(row.created_at) %></td>
+                    <td><span class="admin-pill admin-pill-<%= row.status %>"><%= row.status %></span></td>
+                    <td><%= row.name %></td>
+                    <td><a href="mailto:<%= row.email %>"><%= row.email %></a></td>
+                    <td class="admin-msg-cell">
+                      <button
+                        type="button"
+                        class="admin-msg-open"
+                        data-msg-key="contact-<%= row.id %>"
+                        aria-haspopup="dialog"
+                      >
+                        <span class="admin-msg-num"><%= msgIdx + 1 %></span>
+                        <span class="admin-msg-label">Message <%= msgIdx + 1 %></span>
+                        <span class="admin-msg-hint">Click to read</span>
+                      </button>
+                      <div class="admin-msg-store" id="contact-<%= row.id %>" hidden aria-hidden="true">
+                        <span
+                          class="admin-msg-meta"
+                          data-title="Contact message <%= msgIdx + 1 %>"
+                          data-name="<%= row.name %>"
+                          data-email="<%= row.email %>"
+                          data-when="<%= fmtAdminDate(row.created_at) %>"
+                        ></span>
+                        <div class="admin-msg-body"><%= row.message %></div>
+                      </div>
+                    </td>
+                    <td class="admin-actions">
+                      <form method="post" action="/admin/submissions/contact/<%= row.id %>/status" class="admin-inline-form">
+                        <select name="status" class="admin-select" aria-label="Status for contact <%= row.id %>">
+                          <option value="new" <%= row.status === 'new' ? 'selected' : '' %>>new</option>
+                          <option value="read" <%= row.status === 'read' ? 'selected' : '' %>>read</option>
+                          <option value="archived" <%= row.status === 'archived' ? 'selected' : '' %>>archived</option>
+                        </select>
+                        <button type="submit" class="btn btn-small">Save</button>
+                      </form>
+                      <form method="post" action="/admin/submissions/contact/<%= row.id %>/delete" class="admin-inline-form" onsubmit="return confirm('Delete this message?');">
+                        <button type="submit" class="btn btn-small btn-danger-outline">Delete</button>
+                      </form>
+                    </td>
+                  </tr>
+                <% }) %>
+                <% if (!recentContact.length) { %>
+                  <tr><td colspan="7" class="admin-empty">No contact messages yet.</td></tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="admin-section" id="inbox-chat">
+          <h2 class="admin-h2">Chatbot messages (website WhatsApp button)</h2>
+          <p class="admin-sub" style="margin: -8px 0 16px;">Yahan website chat se aaye messages dikhenge. WhatsApp par tab dikhega jab user neeche link se WhatsApp khol kar Send dabaye.</p>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>When</th>
+                  <th>Status</th>
+                  <th>Message</th>
+                  <th>Page</th>
+                  <th class="admin-th-actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% recentChat.forEach((row, msgIdx) => { %>
+                  <tr>
+                    <td><%= row.id %></td>
+                    <td class="admin-nowrap"><%= fmtAdminDate(row.created_at) %></td>
+                    <td><span class="admin-pill admin-pill-<%= row.status %>"><%= row.status %></span></td>
+                    <td class="admin-msg-cell">
+                      <button
+                        type="button"
+                        class="admin-msg-open"
+                        data-msg-key="chat-<%= row.id %>"
+                        aria-haspopup="dialog"
+                      >
+                        <span class="admin-msg-num"><%= msgIdx + 1 %></span>
+                        <span class="admin-msg-label">Message <%= msgIdx + 1 %></span>
+                        <span class="admin-msg-hint">Click to read</span>
+                      </button>
+                      <div class="admin-msg-store" id="chat-<%= row.id %>" hidden aria-hidden="true">
+                        <span
+                          class="admin-msg-meta"
+                          data-title="Chat message <%= msgIdx + 1 %>"
+                          data-name="Website chat"
+                          data-email=""
+                          data-when="<%= fmtAdminDate(row.created_at) %>"
+                          data-page="<%= row.page_url || '' %>"
+                        ></span>
+                        <div class="admin-msg-body"><%= row.message %></div>
+                      </div>
+                    </td>
+                    <td class="admin-cell-page"><%= row.page_url ? row.page_url : "—" %></td>
+                    <td class="admin-actions">
+                      <form method="post" action="/admin/submissions/chat/<%= row.id %>/status" class="admin-inline-form">
+                        <select name="status" class="admin-select" aria-label="Status for chat <%= row.id %>">
+                          <option value="new" <%= row.status === 'new' ? 'selected' : '' %>>new</option>
+                          <option value="read" <%= row.status === 'read' ? 'selected' : '' %>>read</option>
+                          <option value="archived" <%= row.status === 'archived' ? 'selected' : '' %>>archived</option>
+                        </select>
+                        <button type="submit" class="btn btn-small">Save</button>
+                      </form>
+                      <form method="post" action="/admin/submissions/chat/<%= row.id %>/delete" class="admin-inline-form" onsubmit="return confirm('Delete this chat message?');">
+                        <button type="submit" class="btn btn-small btn-danger-outline">Delete</button>
+                      </form>
+                    </td>
+                  </tr>
+                <% }) %>
+                <% if (!recentChat.length) { %>
+                  <tr><td colspan="6" class="admin-empty">No chatbot messages yet. Test: open home page → WhatsApp icon → type a message.</td></tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="admin-section" id="inbox-work">
+          <h2 class="admin-h2">Work applications</h2>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>When</th>
+                  <th>Status</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Skill</th>
+                  <th>Resume</th>
+                  <th class="admin-th-actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% recentWork.forEach((row, skillIdx) => {
+                  const skillText = row.skill ? String(row.skill).trim() : "";
+                %>
+                  <tr>
+                    <td><%= row.id %></td>
+                    <td class="admin-nowrap"><%= fmtAdminDate(row.created_at) %></td>
+                    <td><span class="admin-pill admin-pill-<%= row.status %>"><%= row.status %></span></td>
+                    <td><%= row.full_name %></td>
+                    <td><a href="mailto:<%= row.email %>"><%= row.email %></a></td>
+                    <td class="admin-msg-cell">
+                      <% if (skillText) { %>
+                      <button
+                        type="button"
+                        class="admin-msg-open"
+                        data-msg-key="work-<%= row.id %>"
+                        aria-haspopup="dialog"
+                      >
+                        <span class="admin-msg-num"><%= skillIdx + 1 %></span>
+                        <span class="admin-msg-label">Message <%= skillIdx + 1 %></span>
+                        <span class="admin-msg-hint">Click to read</span>
+                      </button>
+                      <div class="admin-msg-store" id="work-<%= row.id %>" hidden aria-hidden="true">
+                        <span
+                          class="admin-msg-meta"
+                          data-title="Message <%= skillIdx + 1 %>"
+                          data-field-label="Skill"
+                          data-name="<%= row.full_name %>"
+                          data-email="<%= row.email %>"
+                          data-when="<%= fmtAdminDate(row.created_at) %>"
+                        ></span>
+                        <div class="admin-msg-body"><%= skillText %></div>
+                      </div>
+                      <% } else { %>
+                        <span class="admin-muted">—</span>
+                      <% } %>
+                    </td>
+                    <td class="admin-cell-msg">
+                      <% if (row.resume) { %><a href="<%= row.resume %>" target="_blank" rel="noopener">Link</a><% } else { %>—<% } %>
+                    </td>
+                    <td class="admin-actions">
+                      <form method="post" action="/admin/submissions/work/<%= row.id %>/status" class="admin-inline-form">
+                        <select name="status" class="admin-select" aria-label="Status for application <%= row.id %>">
+                          <option value="new" <%= row.status === 'new' ? 'selected' : '' %>>new</option>
+                          <option value="read" <%= row.status === 'read' ? 'selected' : '' %>>read</option>
+                          <option value="archived" <%= row.status === 'archived' ? 'selected' : '' %>>archived</option>
+                        </select>
+                        <button type="submit" class="btn btn-small">Save</button>
+                      </form>
+                      <form method="post" action="/admin/submissions/work/<%= row.id %>/delete" class="admin-inline-form" onsubmit="return confirm('Delete this application?');">
+                        <button type="submit" class="btn btn-small btn-danger-outline">Delete</button>
+                      </form>
+                    </td>
+                  </tr>
+                <% }) %>
+                <% if (!recentWork.length) { %>
+                  <tr><td colspan="8" class="admin-empty">No applications yet.</td></tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="admin-section" id="users">
+          <h2 class="admin-h2">Users</h2>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Joined</th>
+                  <th>Role</th>
+                  <th>Provider</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th class="admin-th-actions">Role actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% users.forEach((u) => { %>
+                  <tr class="<%= u.id === currentAdminId ? 'admin-row-self' : '' %>">
+                    <td><%= u.id %></td>
+                    <td class="admin-nowrap"><%= u.created_at %></td>
+                    <td><span class="admin-pill <%= u.role === 'admin' ? 'admin-pill-admin' : 'admin-pill-user' %>"><%= u.role %></span></td>
+                    <td><%= u.provider %></td>
+                    <td><%= u.name %></td>
+                    <td><%= u.email %></td>
+                    <td class="admin-actions">
+                      <% if (u.id === currentAdminId) { %>
+                        <span class="admin-muted">You</span>
+                      <% } else { %>
+                        <form method="post" action="/admin/users/<%= u.id %>/role" class="admin-inline-form">
+                          <select name="role" class="admin-select" aria-label="Role for user <%= u.id %>">
+                            <option value="user" <%= u.role === 'user' ? 'selected' : '' %>>user</option>
+                            <option value="admin" <%= u.role === 'admin' ? 'selected' : '' %>>admin</option>
+                          </select>
+                          <button type="submit" class="btn btn-small">Update</button>
+                        </form>
+                      <% } %>
+                    </td>
+                  </tr>
+                <% }) %>
+                <% if (!users.length) { %>
+                  <tr><td colspan="7" class="admin-empty">No users.</td></tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div id="admin-msg-modal" class="admin-msg-modal" hidden role="dialog" aria-modal="true" aria-labelledby="admin-msg-modal-title">
+    <div class="admin-msg-modal__backdrop" data-close-modal tabindex="-1"></div>
+    <div class="admin-msg-modal__panel" role="document">
+      <header class="admin-msg-modal__head">
+        <div>
+          <span class="admin-msg-modal__badge" id="admin-msg-modal-badge">#1</span>
+          <h3 id="admin-msg-modal-title">Message</h3>
+        </div>
+        <button type="button" class="admin-msg-modal__close" data-close-modal aria-label="Close message">&times;</button>
+      </header>
+      <dl class="admin-msg-modal__meta">
+        <div><dt>From</dt><dd id="admin-msg-modal-from">—</dd></div>
+        <div><dt>Email</dt><dd id="admin-msg-modal-email">—</dd></div>
+        <div><dt>When</dt><dd id="admin-msg-modal-when">—</dd></div>
+        <div id="admin-msg-modal-page-row" hidden><dt>Page</dt><dd id="admin-msg-modal-page">—</dd></div>
+      </dl>
+      <div class="admin-msg-modal__body-wrap">
+        <p class="admin-msg-modal__label" id="admin-msg-modal-field-label">Message</p>
+        <div id="admin-msg-modal-body" class="admin-msg-modal__body"></div>
+      </div>
+    </div>
+  </div>
+
+  <%- include("../partials/whatsapp-float") %>
+  <script src="/main.js"></script>
+  <script src="/whatsapp-float.js"></script>
+  <script>
+    (function () {
+      var el = document.getElementById("adminChart");
+      if (!el || typeof Chart === "undefined") return;
+      var labels = <%- JSON.stringify(chartLabels) %>;
+      var contact = <%- JSON.stringify(chartSeries.contact) %>;
+      var work = <%- JSON.stringify(chartSeries.work) %>;
+      var orders = <%- JSON.stringify(chartSeries.orders) %>;
+      var root = document.documentElement;
+      var muted = getComputedStyle(root).getPropertyValue("--muted").trim() || "#a8b4d7";
+      var brand = getComputedStyle(root).getPropertyValue("--brand").trim() || "#2f6efb";
+      var text = getComputedStyle(root).getPropertyValue("--text").trim() || "#f3f6ff";
+      new Chart(el, {
+        type: "line",
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: "Contact",
+              data: contact,
+              borderColor: brand,
+              backgroundColor: "rgba(47, 110, 251, 0.12)",
+              tension: 0.35,
+              fill: true,
+            },
+            {
+              label: "Work",
+              data: work,
+              borderColor: muted,
+              backgroundColor: "rgba(168, 180, 215, 0.15)",
+              tension: 0.35,
+              fill: true,
+            },
+            {
+              label: "Orders",
+              data: orders,
+              borderColor: "#3dd68c",
+              backgroundColor: "rgba(61, 214, 140, 0.12)",
+              tension: 0.35,
+              fill: true,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: text } },
+          },
+          scales: {
+            x: {
+              ticks: { color: muted, maxRotation: 0 },
+              grid: { color: "rgba(128, 140, 180, 0.15)" },
+            },
+            y: {
+              beginAtZero: true,
+              ticks: { color: muted, precision: 0 },
+              grid: { color: "rgba(128, 140, 180, 0.15)" },
+            },
+          },
+        },
+      });
+    })();
+
+    document.querySelectorAll(".admin-copy-link").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var url = btn.getAttribute("data-copy-url");
+        if (!url) return;
+        navigator.clipboard.writeText(url).then(function () {
+          var prev = btn.textContent;
+          btn.textContent = "Copied!";
+          setTimeout(function () { btn.textContent = prev; }, 2000);
+        });
+      });
+    });
+
+    (function () {
+      var modal = document.getElementById("admin-msg-modal");
+      if (!modal) return;
+
+      var titleEl = document.getElementById("admin-msg-modal-title");
+      var badgeEl = document.getElementById("admin-msg-modal-badge");
+      var fromEl = document.getElementById("admin-msg-modal-from");
+      var emailEl = document.getElementById("admin-msg-modal-email");
+      var whenEl = document.getElementById("admin-msg-modal-when");
+      var pageRow = document.getElementById("admin-msg-modal-page-row");
+      var pageEl = document.getElementById("admin-msg-modal-page");
+      var bodyEl = document.getElementById("admin-msg-modal-body");
+      var fieldLabelEl = document.getElementById("admin-msg-modal-field-label");
+      var lastFocus = null;
+
+      function closeModal() {
+        modal.hidden = true;
+        document.body.classList.remove("admin-msg-modal-open");
+        if (lastFocus && lastFocus.focus) lastFocus.focus();
+      }
+
+      function openModal(key, trigger) {
+        var store = document.getElementById(key);
+        if (!store) return;
+        var meta = store.querySelector(".admin-msg-meta");
+        var body = store.querySelector(".admin-msg-body");
+        if (!meta || !body) return;
+
+        lastFocus = trigger;
+        var title = meta.getAttribute("data-title") || "Message";
+        var numMatch = title.match(/(\d+)/);
+        badgeEl.textContent = numMatch ? "#" + numMatch[1] : "#";
+        titleEl.textContent = title;
+        fromEl.textContent = meta.getAttribute("data-name") || "—";
+        var email = meta.getAttribute("data-email") || "";
+        emailEl.textContent = email || "—";
+        emailEl.innerHTML = email
+          ? '<a href="mailto:' + email + '">' + email + "</a>"
+          : "—";
+        whenEl.textContent = meta.getAttribute("data-when") || "—";
+        var page = meta.getAttribute("data-page") || "";
+        if (page) {
+          pageRow.hidden = false;
+          pageEl.textContent = page;
+        } else {
+          pageRow.hidden = true;
+          pageEl.textContent = "—";
+        }
+        bodyEl.textContent = body.textContent || body.innerText || "—";
+        if (fieldLabelEl) {
+          fieldLabelEl.textContent = meta.getAttribute("data-field-label") || "Message";
+        }
+
+        modal.hidden = false;
+        document.body.classList.add("admin-msg-modal-open");
+        modal.querySelector(".admin-msg-modal__close").focus();
+      }
+
+      document.querySelectorAll(".admin-msg-open").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var key = btn.getAttribute("data-msg-key");
+          if (key) openModal(key, btn);
+        });
+      });
+
+      modal.querySelectorAll("[data-close-modal]").forEach(function (el) {
+        el.addEventListener("click", closeModal);
+      });
+
+      document.addEventListener("keydown", function (e) {
+        if (!modal.hidden && e.key === "Escape") closeModal();
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+node_modules/
+.env
+.env.local
+.env.*.local
+
+# Local runtime DB files (do not commit)
+data/*.sqlite
+data/*.sqlite-shm
+data/*.sqlite-wal
+data/*.sqlite3
+data/form-submissions.jsonl
+data/*.mv.db
+data/*.trace.db
+data/*.lock.db
+data/shrisha-local*
+data/uploads/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.log
+
+# Python caches
+__pycache__/
+*.pyc
+
+# Java
+backend/target/
+.tools/
+*.jar

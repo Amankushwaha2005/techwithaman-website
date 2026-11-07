@@ -1,0 +1,59 @@
+<%# =============================================================================
+   BALANCE SUCCESS PAGE
+   URL: /order/balance-success
+   File: views/pages/order-balance-success.ejs
+   Final payment confirmation
+   ============================================================================= %>
+<%- include("../partials/head", { page }) %>
+<%- include("../partials/navbar", { navItems, brand, page }) %>
+
+  <main>
+    <section class="section order-success-section">
+      <div class="container">
+        <article class="card order-success-card">
+          <% if (order && order.status === 'completed') { %>
+            <span class="chip">Project fully paid</span>
+            <h1>Thank you, <%= order.name %>!</h1>
+            <p>Your balance payment is confirmed. The project is now fully paid — thank you for choosing us!</p>
+            <dl class="order-summary-list">
+              <div><dt>Order ID</dt><dd><code><%= order.public_id %></code></dd></div>
+              <div><dt>Service</dt><dd><%= order.service %></dd></div>
+              <div><dt>Package</dt><dd><%= order.plan %></dd></div>
+              <div><dt>Balance paid</dt><dd>₹<%= Number(order.balance_paid_inr || 0).toLocaleString("en-IN") %></dd></div>
+              <div><dt>Total paid</dt><dd>₹<%= order.total_inr.toLocaleString("en-IN") %></dd></div>
+              <% if (receipt) { %>
+              <div><dt>Payment date</dt><dd><%= receipt.paymentDate %></dd></div>
+              <div><dt>Gateway</dt><dd><%= receipt.gateway %></dd></div>
+              <% if (receipt.paymentId && receipt.paymentId !== '—') { %>
+              <div><dt>Payment ID</dt><dd><code><%= receipt.paymentId %></code></dd></div>
+              <% } %>
+              <% } %>
+            </dl>
+          <% } else { %>
+            <h1>Payment not found</h1>
+            <p>If you just paid, wait a moment and refresh — or contact us on WhatsApp.</p>
+          <% } %>
+          <div class="order-success-actions">
+            <% if (order && order.status === 'completed') { %>
+            <a
+              class="btn"
+              href="/order/receipt?id=<%= encodeURIComponent(order.public_id) %>&phase=balance&print=1"
+              target="_blank"
+              rel="noopener noreferrer"
+            >Download balance receipt</a>
+            <a
+              class="btn btn-outline"
+              href="/order/receipt?id=<%= encodeURIComponent(order.public_id) %>&phase=balance"
+              target="_blank"
+              rel="noopener noreferrer"
+            >View receipt</a>
+            <% } %>
+            <a class="btn btn-outline" href="/">Back to home</a>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+<%- include("../partials/footer", { brand, year }) %>
+<%- include("../partials/scripts") %>

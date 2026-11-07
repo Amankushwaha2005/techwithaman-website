@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js" crossorigin></script>
+</head>
+<body class="admin-body">
+  <div class="admin-app">
+    <aside class="admin-sidebar" aria-label="Admin navigation">
+      <a class="admin-brand" href="/admin" aria-label="ShrishaTechnology">
+        <img src="/images/logo.png" alt="" class="admin-brand__logo" width="40" height="40">
+        <span class="admin-brand__text">ShrishaTechnology</span>
+      </a>
+      <p class="admin-sidebar-tag">Control center</p>
+      <nav class="admin-side-nav">
+        <a href="/admin">Dashboard</a>
+        <a href="/admin/campaigns">Campaigns &amp; media</a>
+        <a href="/admin/portfolio">Portfolio</a>
+        <a href="#overview">Overview</a>
+        <a href="#activity">Activity chart</a>
+        <a href="#inbox-orders">Payments &amp; orders</a>
+        <a href="#inbox-contact">Contact inbox</a>
+        <a href="#inbox-chat">Chatbot messages</a>
+        <a href="#inbox-work">Work applications</a>
+        <a href="#users">Users</a>
+      </nav>
+      <div class="admin-sidebar-foot">
+        <a class="admin-sidebar-link" href="/">View site</a>
+        <a class="admin-sidebar-link" href="/auth/logout">Logout</a>
+      </div>
+    </aside>
+
+    <div class="admin-main">
+      <header class="admin-topbar">
+        <div>
+          <h1 class="admin-title">Dashboard</h1>
+          <p class="admin-sub">
+            Signed in as {{ authUser.name if authUser and authUser.name else "Admin" }}
+            {% if authUser and authUser.role == 'admin' %} · <strong>Admin</strong>{% endif %}
+          </p>
+        </div>
+        <button class="theme-toggle" type="button" aria-label="Toggle theme" title="Toggle theme">
+          <span class="theme-icon" aria-hidden="true">
+            <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 14.5a8.5 8.5 0 0 1-11.6-11A9.5 9.5 0 1 0 21 14.5Z"/></svg>
+            <svg class="icon-sun" viewBox="0 0 24 24"><path d="M12 18a6 6 0 1 1 0-12 6 6 0 1 1 0 12Zm0-16a1 1 0 0 1 1 1v1a1 1 0 1 1-2 0V3a1 1 0 0 1 1-1Zm0 18a1 1 0 0 1 1 1v1a1 1 0 1 1-2 0v-1a1 1 0 0 1 1-1ZM3 11h1a1 1 0 1 1 0 2H3a1 1 0 1 1 0-2Zm17 0h1a1 1 0 1 1 0 2h-1a1 1 0 1 1 0-2ZM5.6 4.2a1 1 0 0 1 1.4 0l.7.7a1 1 0 0 1-1.4 1.4l-.7-.7a1 1 0 0 1 0-1.4Zm10.7 10.7a1 1 0 0 1 1.4 0l.7.7a1 1 0 0 1-1.4 1.4l-.7-.7a1 1 0 0 1 0-1.4ZM18.4 4.2a1 1 0 0 1 0 1.4l-.7.7a1 1 0 0 1-1.4-1.4l.7-.7a1 1 0 0 1 1.4 0ZM7.7 14.9a1 1 0 0 1 0 1.4l-.7.7a1 1 0 1 1-1.4 1.4l.7-.7a1 1 0 0 1 1.4 0Z"/></svg>
+          </span>
+        </button>
+      </header>
+
+      <div class="admin-content">
+        {% if flash == 'roleupdated' %}
+          <p class="admin-flash admin-flash-ok" role="status">User role updated.</p>
+        {% elif flash == 'delivered' %}
+          <p class="admin-flash admin-flash-ok" role="status">Project marked as delivered — client can pay balance now.</p>
+        {% elif flash == 'advancepaid' %}
+          <p class="admin-flash admin-flash-ok" role="status">Advance marked as paid.</p>
+        {% elif flash == 'cashadvance' %}
+          <p class="admin-flash admin-flash-ok" role="status">Cash advance received. Start the project. Collect the balance only after delivery.</p>
+        {% elif flash == 'cashfull' %}
+          <p class="admin-flash admin-flash-ok" role="status">Fully paid in cash. Start the project now. Do not collect any more money. Mark delivered when the work is finished.</p>
+        {% elif flash == 'deliveredfull' %}
+          <p class="admin-flash admin-flash-ok" role="status">Delivered. This order was already fully paid, so nothing more is due.</p>
+        {% elif flash == 'orderdeleted' %}
+          <p class="admin-flash admin-flash-ok" role="status">Order deleted.</p>
+        {% elif flash == 'userdeleted' %}
+          <p class="admin-flash admin-flash-ok" role="status">User deleted.</p>
+        {% endif %}
+        {% if err == 'invalid' %}
+          <p class="admin-flash admin-flash-err" role="alert">That action was not valid.</p>
+        {% elif err == 'selfdemote' %}
+          <p class="admin-flash admin-flash-err" role="alert">You cannot remove your own admin role.</p>
+        {% elif err == 'selfdelete' %}
+          <p class="admin-flash admin-flash-err" role="alert">You cannot delete your own account.</p>
+        {% elif err == 'lastadmin' %}
+          <p class="admin-flash admin-flash-err" role="alert">The last admin account cannot be deleted.</p>
+        {% elif err == 'notready' %}
+          <p class="admin-flash admin-flash-err" role="alert">Only advance-paid orders can be marked delivered.</p>
+        {% elif err == 'nobalance' %}
+          <p class="admin-flash admin-flash-err" role="alert">This order has no remaining balance to collect.</p>
+        {% elif err %}
+          <p class="admin-flash admin-flash-err" role="alert">{{ err }}</p>
+        {% endif %}
+
+        <section class="admin-section" id="overview">
+          <h2 class="admin-h2">Overview</h2>
+          <div class="admin-kpi-grid">
+            <article class="admin-kpi">
+              <span class="admin-kpi-label">Total users</span>
+              <strong class="admin-kpi-value">{{ stats.users }}</strong>
+              <span class="admin-kpi-meta">{{ stats.usersWeek }} new (7 days)</span>
+            </article>
+            <article class="admin-kpi">
+              <span class="admin-kpi-label">Contact messages</span>
+              <strong class="admin-kpi-value">{{ stats.contacts }}</strong>
+              <span class="admin-kpi-meta admin-kpi-warn">{{ stats.contactsNew }} new</span>
+            </article>
+            <article class="admin-kpi">
+              <span class="admin-kpi-label">Work applications</span>
+              <strong class="admin-kpi-value">{{ stats.work }}</strong>
+              <span class="admin-kpi-meta admin-kpi-warn">{{ stats.workNew }} new</span>
+            </article>
+            <article class="admin-kpi">
+              <span class="admin-kpi-label">Chatbot messages</span>
+              <strong class="admin-kpi-value">{{ stats.chats }}</strong>
+              <span class="admin-kpi-meta admin-kpi-warn">{{ stats.chatsNew }} new</span>
+            </article>
+            <article class="admin-kpi admin-kpi-accent">
+              <span class="admin-kpi-label">Orders (total)</span>
+              <strong class="admin-kpi-value">{{ stats.orders }}</strong>
+              <span class="admin-kpi-meta">{{ stats.ordersAdvancePaid }} with payment · {{ stats.ordersCompleted }} fully paid</span>
+            </article>
+            <article class="admin-kpi admin-kpi-accent">
+              <span class="admin-kpi-label">Revenue collected</span>
+              <strong class="admin-kpi-value">₹{{ stats.revenuePaid }}</strong>
+              <span class="admin-kpi-meta">{{ stats.ordersBalanceDue }} awaiting balance payment</span>
+            </article>
+            <article class="admin-kpi">
+              <span class="admin-kpi-label">Pipeline</span>
+              <strong class="admin-kpi-value">{{ stats.pipeline }}</strong>
+              <span class="admin-kpi-meta">Open items</span>
+            </article>
+          </div>
+        </section>
+
+        <section class="admin-section" id="activity">
+          <h2 class="admin-h2">Submissions (last 14 days)</h2>
+          <div class="admin-chart-card">
+            <canvas id="adminChart" height="120" aria-label="Submissions chart"></canvas>
+          </div>
+        </section>
+
+        <section class="admin-section" id="inbox-orders">
+          <h2 class="admin-h2">Payments &amp; orders</h2>
+          <p class="admin-section-desc">Cash orders stay “Cash pending” until you receive the money. When an order is fully paid, start the work and do not collect anything more — mark it delivered when it is finished.</p>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>When</th>
+                  <th>Status</th>
+                  <th>Order ID</th>
+                  <th>Customer</th>
+                  <th>Service / plan</th>
+                  <th>Advance</th>
+                  <th>Balance</th>
+                  <th>Total</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody class="admin-fold is-folded">
+                {% for o in orders %}
+                  <tr{% if loop.index > 5 %} class="admin-row-extra"{% endif %}>
+                    <td>{{ o.id }}</td>
+                    <td class="admin-nowrap">{{ o.whenLabel }}</td>
+                    <td>
+                      <span class="admin-pill admin-pill-{{ o.pillClass }}">{{ o.statusLabel }}</span>
+                      {% if o.isCash %}<br><span class="admin-muted">Cash</span>{% endif %}
+                      {% if o.delivered %}<br><span class="admin-muted">Delivered</span>{% endif %}
+                      {% if o.isCompleted and not o.delivered %}
+                        <br><span class="admin-muted">Fully paid — start work, then mark delivered.</span>
+                      {% elif o.isCashPending %}
+                        <br><span class="admin-muted">{% if o.fullCashChoice %}Full cash not received yet{% else %}Advance cash not received yet{% endif %}</span>
+                      {% endif %}
+                    </td>
+                    <td class="admin-nowrap"><code>{{ o.public_id }}</code></td>
+                    <td>
+                      <strong>{{ o.name }}</strong><br>
+                      <a href="mailto:{{ o.email }}">{{ o.email }}</a>
+                      {% if o.phone %}<br><span class="admin-muted">{{ o.phone }}</span>{% endif %}
+                    </td>
+                    <td>{{ o.service }}<br><span class="admin-muted">{{ o.plan }}</span></td>
+                    <td>₹{{ o.advance_paid_inr or o.amount_inr }}</td>
+                    <td>{% if o.isCompleted %}₹{{ o.balance_paid_inr }}{% elif o.balanceDue > 0 %}₹{{ o.balanceDue }} due{% else %}—{% endif %}</td>
+                    <td>₹{{ o.total_inr }}</td>
+                    <td class="admin-order-actions">
+                      {% if o.canDeliver %}
+                        <form method="post" action="/admin/orders/{{ o.id }}/deliver" class="admin-inline-form">
+                          <button type="submit" class="btn btn-small">Mark delivered</button>
+                        </form>
+                      {% endif %}
+                      {% if o.showBalanceLink %}
+                        <a class="btn btn-small" href="/order/pay-balance?id={{ o.public_id }}" target="_blank" rel="noopener">Balance link</a>
+                        <form method="post" action="/admin/orders/{{ o.id }}/mark-cash-balance" class="admin-inline-form" onsubmit="return confirm('Mark the remaining balance as received in cash? The order will become fully paid.');">
+                          <button type="submit" class="btn btn-small">Cash balance received</button>
+                        </form>
+                      {% endif %}
+                      {% if o.isPaidLike %}
+                        <a class="btn btn-small btn-outline" href="/order/receipt?id={{ o.public_id }}" target="_blank" rel="noopener">Receipt</a>
+                      {% endif %}
+                      {% if o.delivered or o.isCompleted %}
+                        {% if o.portfolioId %}
+                          <a class="btn btn-small btn-outline" href="/admin/portfolio?edit={{ o.portfolioId }}">Edit portfolio</a>
+                        {% else %}
+                          <a class="btn btn-small" href="/admin/portfolio?order={{ o.id }}">Add to portfolio</a>
+                        {% endif %}
+                      {% endif %}
+                      {% if o.isCashPending %}
+                        <form method="post" action="/admin/orders/{{ o.id }}/mark-cash-received" class="admin-inline-form" onsubmit="return confirm('Confirm that you received this cash?');">
+                          <button type="submit" class="btn btn-small">{% if o.fullCashChoice %}Cash fully received{% else %}Cash advance received{% endif %}</button>
+                        </form>
+                        <form method="post" action="/admin/orders/{{ o.id }}/delete" class="admin-inline-form" onsubmit="return confirm('Delete this cash order?');">
+                          <button type="submit" class="btn btn-small btn-outline admin-btn-danger">Delete</button>
+                        </form>
+                      {% endif %}
+                      {% if o.isPending %}
+                        <a class="btn btn-small" href="/order/pay-advance?id={{ o.public_id }}" target="_blank" rel="noopener">Pay link</a>
+                        <form method="post" action="/admin/orders/{{ o.id }}/mark-advance-paid" class="admin-inline-form" onsubmit="return confirm('Mark advance as paid?');">
+                          <button type="submit" class="btn btn-small btn-outline">Mark paid</button>
+                        </form>
+                        <form method="post" action="/admin/orders/{{ o.id }}/delete" class="admin-inline-form" onsubmit="return confirm('Delete this pending order?');">
+                          <button type="submit" class="btn btn-small btn-outline admin-btn-danger">Delete</button>
+                        </form>
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% else %}
+                  <tr><td colspan="10" class="admin-empty">No orders yet. Payments from the order page will appear here.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% if orders|length > 5 %}
+            <button type="button" class="btn btn-small admin-more-btn" data-more>More ({{ orders|length - 5 }} more)</button>
+          {% endif %}
+        </section>
+
+        <section class="admin-section" id="inbox-contact">
+          <h2 class="admin-h2">Contact inbox</h2>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Status</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Message</th>
+                  <th class="admin-th-actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="admin-fold is-folded">
+                {% for row in contacts %}
+                  <tr{% if loop.index > 5 %} class="admin-row-extra"{% endif %}>
+                    <td>{{ row.id }}</td>
+                    <td><span class="admin-pill admin-pill-{{ row.status }}">{{ row.status }}</span></td>
+                    <td>{{ row.name }}</td>
+                    <td><a href="mailto:{{ row.email }}">{{ row.email }}</a></td>
+                    <td class="admin-cell-msg">
+                      {% if row.messageLong %}
+                        <details class="admin-msg-more">
+                          <summary>{{ row.messageShort }} <span>More</span></summary>
+                          <p>{{ row.message }}</p>
+                        </details>
+                      {% else %}
+                        {{ row.message }}
+                      {% endif %}
+                    </td>
+                    <td class="admin-actions">
+                      <form method="post" action="/admin/submissions/contact/{{ row.id }}/status" class="admin-inline-form">
+                        <select name="status" class="admin-select">
+                          <option value="new" {% if row.status == 'new' %}selected{% endif %}>new</option>
+                          <option value="read" {% if row.status == 'read' %}selected{% endif %}>read</option>
+                          <option value="archived" {% if row.status == 'archived' %}selected{% endif %}>archived</option>
+                        </select>
+                        <button type="submit" class="btn btn-small">Save</button>
+                      </form>
+                      <form method="post" action="/admin/submissions/contact/{{ row.id }}/delete" class="admin-inline-form" onsubmit="return confirm('Delete this message?');">
+                        <button type="submit" class="btn btn-small btn-danger-outline">Delete</button>
+                      </form>
+                    </td>
+                  </tr>
+                {% else %}
+                  <tr><td colspan="6" class="admin-empty">No contact messages yet.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% if contacts|length > 5 %}
+            <button type="button" class="btn btn-small admin-more-btn" data-more>More ({{ contacts|length - 5 }} more)</button>
+          {% endif %}
+        </section>
+
+        <section class="admin-section" id="inbox-chat">
+          <h2 class="admin-h2">Chatbot messages</h2>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Status</th>
+                  <th>Message</th>
+                  <th>Page</th>
+                  <th class="admin-th-actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in chats %}
+                  <tr>
+                    <td>{{ row.id }}</td>
+                    <td><span class="admin-pill admin-pill-{{ row.status }}">{{ row.status }}</span></td>
+                    <td class="admin-cell-msg">{{ row.message }}</td>
+                    <td class="admin-cell-page">{{ row.page_url or "—" }}</td>
+                    <td class="admin-actions">
+                      <form method="post" action="/admin/submissions/chat/{{ row.id }}/status" class="admin-inline-form">
+                        <select name="status" class="admin-select">
+                          <option value="new" {% if row.status == 'new' %}selected{% endif %}>new</option>
+                          <option value="read" {% if row.status == 'read' %}selected{% endif %}>read</option>
+                          <option value="archived" {% if row.status == 'archived' %}selected{% endif %}>archived</option>
+                        </select>
+                        <button type="submit" class="btn btn-small">Save</button>
+                      </form>
+                      <form method="post" action="/admin/submissions/chat/{{ row.id }}/delete" class="admin-inline-form" onsubmit="return confirm('Delete this chat message?');">
+                        <button type="submit" class="btn btn-small btn-danger-outline">Delete</button>
+                      </form>
+                    </td>
+                  </tr>
+                {% else %}
+                  <tr><td colspan="5" class="admin-empty">No chatbot messages yet.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="admin-section" id="inbox-work">
+          <h2 class="admin-h2">Work applications</h2>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Status</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Skill</th>
+                  <th>Resume</th>
+                  <th class="admin-th-actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in workRows %}
+                  <tr>
+                    <td>{{ row.id }}</td>
+                    <td><span class="admin-pill admin-pill-{{ row.status }}">{{ row.status }}</span></td>
+                    <td>{{ row.full_name }}</td>
+                    <td><a href="mailto:{{ row.email }}">{{ row.email }}</a></td>
+                    <td class="admin-cell-msg">{{ row.skill or "—" }}</td>
+                    <td>
+                      {% if row.resume %}
+                        <a href="{{ row.resume }}" target="_blank" rel="noopener">Link</a>
+                      {% else %}—{% endif %}
+                    </td>
+                    <td class="admin-actions">
+                      <form method="post" action="/admin/submissions/work/{{ row.id }}/status" class="admin-inline-form">
+                        <select name="status" class="admin-select">
+                          <option value="new" {% if row.status == 'new' %}selected{% endif %}>new</option>
+                          <option value="read" {% if row.status == 'read' %}selected{% endif %}>read</option>
+                          <option value="archived" {% if row.status == 'archived' %}selected{% endif %}>archived</option>
+                        </select>
+                        <button type="submit" class="btn btn-small">Save</button>
+                      </form>
+                      <form method="post" action="/admin/submissions/work/{{ row.id }}/delete" class="admin-inline-form" onsubmit="return confirm('Delete this application?');">
+                        <button type="submit" class="btn btn-small btn-danger-outline">Delete</button>
+                      </form>
+                    </td>
+                  </tr>
+                {% else %}
+                  <tr><td colspan="7" class="admin-empty">No applications yet.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="admin-section" id="users">
+          <h2 class="admin-h2">Users</h2>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Role</th>
+                  <th>Provider</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th class="admin-th-actions">Role actions</th>
+                </tr>
+              </thead>
+              <tbody class="admin-fold is-folded">
+                {% for u in users %}
+                  <tr{% if loop.index > 5 %} class="admin-row-extra"{% endif %}>
+                    <td>{{ u.id }}</td>
+                    <td><span class="admin-pill {% if u.role == 'admin' %}admin-pill-admin{% else %}admin-pill-user{% endif %}">{{ u.role }}</span></td>
+                    <td>{{ u.provider }}</td>
+                    <td>{{ u.name }}</td>
+                    <td>{{ u.email }}</td>
+                    <td class="admin-actions">
+                      <form method="post" action="/admin/users/{{ u.id }}/role" class="admin-inline-form">
+                        <select name="role" class="admin-select">
+                          <option value="user" {% if u.role == 'user' %}selected{% endif %}>user</option>
+                          <option value="admin" {% if u.role == 'admin' %}selected{% endif %}>admin</option>
+                        </select>
+                        <button type="submit" class="btn btn-small">Update</button>
+                      </form>
+                      {% if u.canDelete %}
+                        <form method="post" action="/admin/users/{{ u.id }}/delete" class="admin-inline-form" onsubmit="return confirm('Delete this user?');">
+                          <button type="submit" class="btn btn-small btn-danger-outline">Delete</button>
+                        </form>
+                      {% else %}
+                        <span class="admin-muted">You</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% else %}
+                  <tr><td colspan="6" class="admin-empty">No users yet. Sign up first, then open /admin.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% if users|length > 5 %}
+            <button type="button" class="btn btn-small admin-more-btn" data-more>More ({{ users|length - 5 }} more)</button>
+          {% endif %}
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <script src="/main.js"></script>
+  <script>
+    (function () {
+      var el = document.getElementById("adminChart");
+      if (!el || typeof Chart === "undefined") return;
+      var labels = {{ chartLabelsJson|safe }};
+      var contact = {{ chartContactJson|safe }};
+      var work = {{ chartWorkJson|safe }};
+      var orders = {{ chartOrdersJson|safe }};
+      var root = document.documentElement;
+      var muted = getComputedStyle(root).getPropertyValue("--muted").trim() || "#a8b4d7";
+      var brand = getComputedStyle(root).getPropertyValue("--brand").trim() || "#c9a227";
+      var text = getComputedStyle(root).getPropertyValue("--text").trim() || "#f3f6ff";
+      new Chart(el, {
+        type: "line",
+        data: {
+          labels: labels,
+          datasets: [
+            { label: "Contact", data: contact, borderColor: brand, tension: 0.35, fill: false },
+            { label: "Work", data: work, borderColor: muted, tension: 0.35, fill: false },
+            { label: "Orders", data: orders, borderColor: "#3dd68c", tension: 0.35, fill: false }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: text } } },
+          scales: {
+            x: { ticks: { color: muted }, grid: { color: "rgba(128,140,180,0.15)" } },
+            y: { beginAtZero: true, ticks: { color: muted, precision: 0 }, grid: { color: "rgba(128,140,180,0.15)" } }
+          }
+        }
+      });
+    })();
+    document.querySelectorAll("[data-more]").forEach(function (btn) {
+      var fold = btn.closest(".admin-section").querySelector(".admin-fold");
+      var moreLabel = btn.textContent;
+      btn.addEventListener("click", function () {
+        var open = fold.classList.toggle("is-open");
+        fold.classList.toggle("is-folded", !open);
+        btn.textContent = open ? "Less" : moreLabel;
+      });
+    });
+  </script>
+</body>
+</html>

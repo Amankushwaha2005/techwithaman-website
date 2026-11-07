@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Start Shrisha Technology server",
+      "type": "java",
+      "request": "launch",
+      "mainClass": "com.shrishatechnology.Application",
+      "projectName": "shrisha-technology",
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}

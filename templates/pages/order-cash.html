@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+  <main>
+    <section class="section order-success-section">
+      <div class="container">
+        <article class="card order-success-card">
+          {% if order %}
+            <span class="chip">Cash payment</span>
+            <h1>Cash payment saved, {{ order.name }}</h1>
+            {% if balancePhase %}
+              <p>
+                You chose to pay the remaining <strong>₹{{ dueNow }}</strong> in cash.
+                This shows on our admin panel as cash balance pending. We will mark it fully paid after we receive the cash.
+              </p>
+            {% elif fullPay %}
+              <p>
+                You chose to pay the full amount <strong>₹{{ dueNow }}</strong> in cash.
+                Work starts only after we receive it. Once it is marked fully paid, there is no balance left to collect.
+              </p>
+            {% else %}
+              <p>
+                You chose to pay the advance <strong>₹{{ dueNow }}</strong> in cash.
+                We start the project after the cash is received. The remaining balance is due after delivery.
+              </p>
+            {% endif %}
+            <dl class="order-summary-list">
+              <div><dt>Order ID</dt><dd><code>{{ order.public_id }}</code></dd></div>
+              <div><dt>Service</dt><dd>{{ order.service }}</dd></div>
+              <div><dt>Package</dt><dd>{{ order.plan }}</dd></div>
+              <div><dt>Package total</dt><dd>₹{{ order.total_inr }}</dd></div>
+              <div><dt>Pay in cash</dt><dd>₹{{ dueNow }}</dd></div>
+            </dl>
+            <p class="order-balance-note">Keep this Order ID. Pay in person or hand the cash to our team, and quote this ID.</p>
+          {% else %}
+            <h1>Order not found</h1>
+            <p>Check the order link or place a new order from pricing.</p>
+          {% endif %}
+          <div class="order-success-actions">
+            <a class="btn btn-outline" href="/">Back to home</a>
+            <a class="btn btn-outline" href="/pricing">View pricing</a>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+{% endblock %}

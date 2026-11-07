@@ -1,0 +1,65 @@
+# Render Blueprint — Shrisha Technology
+# Repo: https://github.com/Amankushwaha2005/techwithaman-website
+# Keep existing Render service/database names so the live deploy is not recreated.
+
+databases:
+  - name: techwithaman-db
+    databaseName: web_project
+    user: web_project
+    plan: free
+    region: singapore
+
+services:
+  - type: web
+    name: techwithaman-website
+    runtime: java
+    plan: free
+    region: singapore
+    branch: main
+    buildCommand: mvn -f backend/pom.xml -DskipTests package
+    startCommand: java -jar backend/target/shrisha-technology-1.0.0.jar
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: JAVA_VERSION
+        value: 21
+      - key: DATABASE_URL
+        fromDatabase:
+          name: techwithaman-db
+          property: connectionString
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: PAYMENT_ADVANCE_PERCENT
+        value: "50"
+      - key: BASE_URL
+        value: https://techwithaman-website-2026.onrender.com
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: ADMIN_EMAILS
+        sync: false
+      - key: RECAPTCHA_SITE_KEY
+        sync: false
+      - key: RECAPTCHA_SECRET_KEY
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_REDIRECT_URI
+        value: https://techwithaman-website-2026.onrender.com/auth/google/callback
+      - key: GITHUB_CLIENT_ID
+        sync: false
+      - key: GITHUB_CLIENT_SECRET
+        sync: false
+      - key: GITHUB_REDIRECT_URI
+        value: https://techwithaman-website-2026.onrender.com/auth/github/callback
+      - key: MICROSOFT_CLIENT_ID
+        sync: false
+      - key: MICROSOFT_CLIENT_SECRET
+        sync: false
+      - key: MICROSOFT_REDIRECT_URI
+        value: https://techwithaman-website-2026.onrender.com/auth/microsoft/callback
+      - key: PGSSL
+        value: "true"

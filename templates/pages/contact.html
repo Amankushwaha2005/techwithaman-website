@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block content %}
+  <main class="contact-page">
+    <section class="page-hero">
+      <div class="container">
+        <span class="chip">Contact</span>
+        {% if enquiryPlan %}
+        <h1 id="quote-hero-title">Quote: {{ enquiryPlan }}</h1>
+        <p>Tell us a bit more about this service and we will get back with a quote.</p>
+        {% else %}
+        <h1 id="quote-hero-title">Let us Build Your Project</h1>
+        <p>Reach out for website, app, and logo work.</p>
+        {% endif %}
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <article class="quote-topic card" id="quote-topic-card"{% if not enquiryPlan and not enquiryTopic %} hidden{% endif %}>
+          <img id="quote-topic-image" class="quote-topic__photo" alt="" width="200" height="200" hidden>
+          <div class="quote-topic__body">
+            <p class="quote-topic__cat" id="quote-topic-cat"></p>
+            <h2 id="quote-topic-title">{% if enquiryPlan %}{{ enquiryPlan }}{% else %}Service quote{% endif %}</h2>
+            <p id="quote-topic-intro">Share a few details in the form and we will reply with scope, timeline, and price for this work.</p>
+            <ul class="quote-topic__bullets" id="quote-topic-bullets"></ul>
+          </div>
+        </article>
+
+        <aside class="order-cta-banner card">
+          <div>
+            <h2>Ready to start?</h2>
+            <p>Choose a package on Pricing, then pay the advance online — UPI, card, or netbanking.</p>
+          </div>
+          <div class="order-cta-banner__actions">
+            <a class="btn btn-small" href="/pricing">View pricing</a>
+            <a class="btn btn-small btn-outline" href="/order">Place order &amp; pay</a>
+          </div>
+        </aside>
+
+        <div class="contact-grid">
+          <div class="contact-left">
+            <h2>Contact Us</h2>
+            <p>
+              We are available for questions, feedback, or collaboration opportunities.
+              Let us know how we can help!
+            </p>
+            <p>
+              WhatsApp:
+              <a href="https://wa.me/917992020591" target="_blank" rel="noopener noreferrer">+91 79920 20591</a>
+            </p>
+          </div>
+
+          <div class="contact-right">
+            <form class="card contact-form" action="/contact" method="post">
+              <div class="form-row">
+                <label for="name">Name</label>
+                <input id="name" name="name" type="text" placeholder="Your Name" required>
+              </div>
+
+              <div class="form-row">
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" placeholder="Email" required>
+              </div>
+
+              <div class="form-row">
+                <label for="phone">Phone Number</label>
+                <input id="phone" name="phone" type="tel" placeholder="Your 10-digit Indian Number">
+              </div>
+
+              <div class="form-row">
+                <label for="message">Message</label>
+                <textarea id="message" name="message" rows="4" placeholder="Type your message here." required>{{ enquiryDraft }}</textarea>
+              </div>
+
+              {% include "partials/recaptcha-widget.html" %}
+
+              <button class="btn" type="submit">Send Message</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+{% endblock %}
+

@@ -1,0 +1,34 @@
+<%# =============================================================================
+   ADMIN ACCESS DENIED
+   URL: /admin (403)
+   File: views/admin/forbidden.ejs
+   403 page when user is not admin
+   ============================================================================= %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="admin-forbidden-body">
+  <div class="admin-forbidden-card">
+    <h1>403</h1>
+    <p>You do not have access to the admin dashboard.</p>
+    <p class="admin-forbidden-hint">
+      <strong>Live site (Render):</strong> Dashboard → your web service → <strong>Environment</strong> → add
+      <code>ADMIN_EMAILS=your@email.com</code> (same email as login) → Save → open <code>/admin</code> again.
+    </p>
+    <p class="admin-forbidden-hint">
+      <strong>Local:</strong> <code>.env</code> mein <code>ADMIN_EMAILS</code>, ya
+      <code>npm run grant-admin -- your@email.com</code> (pehle signup/login karo).
+    </p>
+    <a class="btn" href="/">Back to site</a>
+  </div>
+  <%- include("../partials/whatsapp-float") %>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin access denied | {{ brand }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="admin-body">
+  <main class="container" style="padding: 48px 0;">
+    <article class="card" style="padding: 24px;">
+      <a class="admin-brand" href="/" aria-label="ShrishaTechnology" style="margin-bottom:16px">
+        <img src="/images/logo.png" alt="" class="admin-brand__logo" width="40" height="40">
+        <span class="admin-brand__text">ShrishaTechnology</span>
+      </a>
+      <h1>Access denied</h1>
+      <p>You are not allowed to view the admin dashboard.</p>
+      {% if loginEmail %}
+        <p>Logged in as: <strong>{{ loginEmail }}</strong></p>
+      {% endif %}
+      {% if not adminEmailsConfigured %}
+        <p>On Render → <strong>Environment</strong>, add <code>ADMIN_EMAILS</code> with the same email you use for Google login (example: <code>you@gmail.com</code>). Save, redeploy, then log out and log in again.</p>
+      {% else %}
+        <p>Your email must be listed in <code>ADMIN_EMAILS</code> on the server (comma-separated if more than one). After updating, log out and sign in with Google again.</p>
+      {% endif %}
+      <div style="margin-top: 18px;">
+        <a class="btn btn-outline" href="/">Back to site</a>
+      </div>
+    </article>
+  </main>
+</body>
+</html>
+
