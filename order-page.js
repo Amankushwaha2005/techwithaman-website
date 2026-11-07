@@ -54,6 +54,15 @@
     return selected && selected.value === "full" ? "full" : "advance";
   }
 
+  function payChannel() {
+    const selected = form.querySelector('input[name="pay_channel"]:checked');
+    return selected && selected.value === "cash" ? "cash" : "online";
+  }
+
+  function buttonLabel() {
+    return payChannel() === "cash" ? "Confirm cash payment" : "Continue to payment";
+  }
+
   function isFullPay() {
     return payMode() === "full";
   }
@@ -95,6 +104,7 @@
         : "Pay the advance in cash. Balance is due after delivery.";
     }
     if (panelAmount && advance > 0) panelAmount.textContent = formatInr(advance);
+    if (payBtn && !payBtn.disabled) payBtn.textContent = buttonLabel();
   }
 
   function showError(msg) {
@@ -359,6 +369,28 @@
           whatsappLink.href = whatsappUrl(payload, publicId, advanceInr || advance);
         }
 
+        if (payChannel() === "cash") {
+          if (!publicId) {
+            throw new Error(res.body.error || "Could not save the cash order.");
+          }
+          return fetch("/api/payments/cash", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ publicId: publicId }),
+          })
+            .then(function (r) {
+              return r.json().then(function (body) {
+                return { ok: r.ok, body: body };
+              });
+            })
+            .then(function (cashRes) {
+              if (!cashRes.ok || !cashRes.body.ok) {
+                throw new Error(cashRes.body.error || "Could not save cash payment.");
+              }
+              window.location.href = cashRes.body.redirectUrl;
+            });
+        }
+
         if (res.ok && res.body.ok && paymentEnabled && res.body.razorpayOrderId) {
           showPaymentPanel(publicId, advanceInr || advance);
           checkoutData = res.body;
@@ -387,7 +419,7 @@
       .finally(function () {
         if (payBtn) {
           payBtn.disabled = false;
-          payBtn.textContent = "Continue to payment";
+          payBtn.textContent = buttonLabel();
         }
       });
   });
@@ -455,7 +487,7 @@
       if (el) el.addEventListener(ev, updateSummary);
     });
   });
-  form.querySelectorAll('input[name="pay_mode"]').forEach(function (el) {
+  form.querySelectorAll('input[name="pay_mode"], input[name="pay_channel"]').forEach(function (el) {
     el.addEventListener("change", updateSummary);
   });
 
